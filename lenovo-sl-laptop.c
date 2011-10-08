@@ -41,6 +41,7 @@
 #include <linux/input.h>
 #include <linux/kthread.h>
 #include <linux/freezer.h>
+#include <linux/delay.h>
 
 #include <linux/proc_fs.h>
 #include <linux/uaccess.h>
@@ -653,6 +654,7 @@ static void backlight_exit(void)
 static int backlight_init(void)
 {
 	int status = 0;
+    struct backlight_properties *lensl_backlight_props;
 
 	lcdd_handle = NULL;
 	backlight = NULL;
@@ -670,10 +672,13 @@ static int backlight_init(void)
 	if (status || !backlight_levels.count)
 		goto err;
 
+    lensl_backlight_props->max_brightness = backlight_levels.count -1;
+    lensl_backlight_props->brightness = lensl_bd_get_brightness(NULL);
+
 	backlight = backlight_device_register(LENSL_BACKLIGHT_NAME,
-			NULL, NULL, &lensl_backlight_ops);
-	backlight->props.max_brightness = backlight_levels.count - 1;
-	backlight->props.brightness = lensl_bd_get_brightness(backlight);
+			NULL, NULL, &lensl_backlight_ops, lensl_backlight_props);
+	//backlight->props.max_brightness = backlight_levels.count - 1;
+	//backlight->props.brightness = lensl_bd_get_brightness(backlight);
 	vdbg_printk(LENSL_INFO, "Started backlight brightness control\n");
 	goto out;
 err:
